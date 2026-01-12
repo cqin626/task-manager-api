@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cqin.taskmanagerapi.common.responses.APIResponse;
+
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserManagementController {
@@ -20,15 +22,16 @@ public class UserManagementController {
       this.userManagementService = userManagementService;
    }
 
-   @GetMapping()
-   public ResponseEntity<List<User>> getUsers() {
-      var users = this.userManagementService.getUsers();
-      return new ResponseEntity<>(users, HttpStatus.OK);
+   @GetMapping
+   public ResponseEntity<APIResponse<List<User>>> getUsers() {
+      var users = userManagementService.getUsers();
+
+      return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(users));
    }
 
    @PostMapping()
-   public ResponseEntity<User> addUser(@RequestBody User user) {
+   public ResponseEntity<APIResponse<User>> addUser(@RequestBody User user) {
       User savedUser = userManagementService.addUser(user);
-      return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+      return ResponseEntity.status(HttpStatus.CREATED).body(APIResponse.success(savedUser));
    }
 }
