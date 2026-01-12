@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.HttpException;
 import com.cqin.taskmanagerapi.common.responses.APIResponse;
 
 @RestControllerAdvice
@@ -14,6 +15,13 @@ public class GlobalExceptionHandler {
    public ResponseEntity<APIResponse<Void>> handleNotFound(NoHandlerFoundException ex) {
       return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
+            .body(APIResponse.error(ex.getMessage()));
+   }
+
+   @ExceptionHandler(HttpException.class)
+   public ResponseEntity<APIResponse<Void>> handleHttpException(HttpException ex) {
+      return ResponseEntity
+            .status(ex.getStatus())
             .body(APIResponse.error(ex.getMessage()));
    }
 
