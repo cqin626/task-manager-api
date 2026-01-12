@@ -12,7 +12,7 @@ import com.cqin.taskmanagerapi.common.responses.APIResponse;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
    @ExceptionHandler(NoHandlerFoundException.class)
-   public ResponseEntity<APIResponse<Void>> handleNotFound(NoHandlerFoundException ex) {
+   public ResponseEntity<APIResponse<Void>> handleInvalidEndpoint(NoHandlerFoundException ex) {
       return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .body(APIResponse.error(ex.getMessage()));
