@@ -1,0 +1,19 @@
+package com.cqin.taskmanagerapi.common.exceptions;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
+
+import com.cqin.taskmanagerapi.common.responses.APIResponse;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+   @ExceptionHandler(NoHandlerFoundException.class)
+   public ResponseEntity<APIResponse<Void>> handleNotFound(NoHandlerFoundException ex) {
+      return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(APIResponse.error(ex.getMessage()));
+   }
+}
