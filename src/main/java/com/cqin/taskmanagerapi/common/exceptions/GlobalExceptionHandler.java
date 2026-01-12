@@ -16,4 +16,12 @@ public class GlobalExceptionHandler {
             .status(HttpStatus.NOT_FOUND)
             .body(APIResponse.error(ex.getMessage()));
    }
+
+   @ExceptionHandler(Exception.class)
+   public ResponseEntity<APIResponse<Void>> handleInternalServerError(Exception ex) {
+      // TODO: Add logging
+      return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(APIResponse.error("Internal server error"));
+   }
 }
