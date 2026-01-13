@@ -2,6 +2,7 @@ package com.cqin.taskmanagerapi.features.usermanagement;
 
 import java.util.List;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.ConflictException;
@@ -11,9 +12,11 @@ import com.cqin.taskmanagerapi.features.usermanagement.dtos.GetUserResponse;
 @Service
 public class UserManagementService {
    private UserManagementRepo userManagementRepo;
+   private PasswordEncoder passwordEncoder;
 
-   public UserManagementService(UserManagementRepo userManagementRepo) {
+   public UserManagementService(UserManagementRepo userManagementRepo, PasswordEncoder passwordEncoder) {
       this.userManagementRepo = userManagementRepo;
+      this.passwordEncoder = passwordEncoder;
    }
 
    public List<GetUserResponse> getUsers() {
@@ -23,7 +26,7 @@ public class UserManagementService {
    }
 
    public GetUserResponse addUser(CreateUserRequest createUserReq) {
-      User user = new User(createUserReq.email(), createUserReq.password());
+      User user = new User(createUserReq.email(), this.passwordEncoder.encode(createUserReq.password()));
 
       if (this.userManagementRepo.existsByEmail(user.getEmail()))
          throw new ConflictException("User already exists");
