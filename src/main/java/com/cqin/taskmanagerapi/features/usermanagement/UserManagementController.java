@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cqin.taskmanagerapi.common.responses.APIResponse;
+import com.cqin.taskmanagerapi.features.usermanagement.dtos.CreateUserRequest;
+import com.cqin.taskmanagerapi.features.usermanagement.dtos.GetUserResponse;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -23,15 +27,16 @@ public class UserManagementController {
    }
 
    @GetMapping
-   public ResponseEntity<APIResponse<List<User>>> getUsers() {
-      var users = userManagementService.getUsers();
+   public ResponseEntity<APIResponse<List<GetUserResponse>>> getUsers() {
+      List<GetUserResponse> users = userManagementService.getUsers();
 
       return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(users));
    }
 
    @PostMapping()
-   public ResponseEntity<APIResponse<User>> addUser(@RequestBody User user) {
-      User savedUser = userManagementService.addUser(user);
-      return ResponseEntity.status(HttpStatus.CREATED).body(APIResponse.success(savedUser));
+   public ResponseEntity<APIResponse<GetUserResponse>> addUser(@RequestBody @Valid CreateUserRequest createUserReq) {
+      GetUserResponse createUserRes = userManagementService.addUser(createUserReq);
+
+      return ResponseEntity.status(HttpStatus.CREATED).body(APIResponse.success(createUserRes));
    }
 }
