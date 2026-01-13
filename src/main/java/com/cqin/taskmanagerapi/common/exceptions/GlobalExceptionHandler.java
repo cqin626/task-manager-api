@@ -2,6 +2,7 @@ package com.cqin.taskmanagerapi.common.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -17,6 +18,13 @@ public class GlobalExceptionHandler {
       return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .body(APIResponse.error(ex.getMessage()));
+   }
+
+   @ExceptionHandler(HttpMessageNotReadableException.class)
+   public ResponseEntity<APIResponse<Void>> handleInvalidJson(HttpMessageNotReadableException ex) {
+      return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(APIResponse.error("Malformed JSON request"));
    }
 
    @ExceptionHandler(HttpException.class)
