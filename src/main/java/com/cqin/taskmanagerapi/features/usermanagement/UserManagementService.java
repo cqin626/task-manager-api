@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.ConflictException;
+import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.ResourceNotFoundException;
 import com.cqin.taskmanagerapi.features.usermanagement.dtos.CreateUserRequest;
 import com.cqin.taskmanagerapi.features.usermanagement.dtos.GetUserResponse;
 
@@ -23,6 +24,13 @@ public class UserManagementService {
       List<GetUserResponse> users = this.userManagementRepo.findAll().stream()
             .map(user -> new GetUserResponse(user.getId(), user.getEmail())).toList();
       return users;
+   }
+
+   public User getUserByEmail(String email) {
+      User user = this.userManagementRepo.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("Invalid user"));
+
+      return user;
    }
 
    public GetUserResponse addUser(CreateUserRequest createUserReq) {
