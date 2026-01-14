@@ -1,6 +1,5 @@
 package com.cqin.taskmanagerapi.features.auth;
 
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -9,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,11 +54,12 @@ public class AuthController {
       TokenResponse accessToken = this.authTokenService.generateAccessToken(accessClaims);
       TokenResponse refreshToken = this.authTokenService.generateRefreshToken(refreshClaims, verifiedUser);
 
-      ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken.token())
+      ResponseCookie refreshCookie = ResponseCookie
+            .from("refresh_token", refreshToken.token())
             .httpOnly(true)
             .secure(true)
             .sameSite("Lax")
-            .path("/api/v1/auth/refresh")
+            .path("/api/v1/auth")
             .maxAge(Duration.between(Instant.now(), refreshToken.expiresAt()))
             .build();
 
@@ -67,4 +68,27 @@ public class AuthController {
             .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
             .body(APIResponse.success(accessToken));
    }
+
+   @PostMapping("/logout")
+   public ResponseEntity<APIResponse<Void>> handleUserLogout(
+         @CookieValue(name = "refresh_token", required = false) String refreshToken) {
+      if (refreshToken != null) {
+         this.authTokenService.invalidateRefreshToken(refreshToken);
+      }
+
+      ResponseCookie refreshCookie = ResponseCookie
+            .from("refresh_token", "")
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("Lax")
+            .path("/api/v1/auth")
+            .maxAge(0)
+            .build();
+
+      return ResponseEntity
+            .status(HttpStatus.OK)
+            .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+            .body(APIResponse.success(null));
+   }
+
 }

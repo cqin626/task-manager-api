@@ -5,7 +5,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.time.Instant;
 import java.util.Date;
 import java.util.HexFormat;
 import java.util.Map;
@@ -16,6 +15,7 @@ import com.cqin.taskmanagerapi.features.authtokenmanagement.dtos.TokenResponse;
 import com.cqin.taskmanagerapi.features.usermanagement.User;
 
 import io.jsonwebtoken.Jwts;
+import jakarta.transaction.Transactional;
 
 @Service
 public class AuthTokenService {
@@ -72,13 +72,12 @@ public class AuthTokenService {
       return new TokenResponse(refreshToken, expiresAt.toInstant());
    }
 
-   public Instant getTokenExpiration(String token) {
-      return Jwts.parser()
-            .verifyWith(this.publicKey)
-            .build()
-            .parseSignedClaims(token)
-            .getPayload()
-            .getExpiration()
-            .toInstant();
+   @Transactional
+   public void invalidateRefreshToken(String token) {
+      String tokenHash = this.getTokenHash(token);
+
+      this.authTokenRepo.findByTokenHash(tokenHash).ifPresent(refreshToken -> {
+         refreshToken.setRevoked(true);
+      });
    }
 }
