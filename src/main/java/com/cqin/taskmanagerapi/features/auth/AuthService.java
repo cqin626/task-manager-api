@@ -57,7 +57,8 @@ public class AuthService {
    public TokenResponse getAccessToken(User user) {
       Map<String, Object> accessClaims = Map.of(
             "uid", user.getId(),
-            "email", user.getEmail());
+            "email", user.getEmail(),
+            "role", user.getRole());
 
       return this.authTokenService.generateAccessToken(accessClaims);
    }

@@ -2,6 +2,8 @@ package com.cqin.taskmanagerapi.features.usermanagement;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,12 +22,17 @@ public class User {
    @Column(nullable = false)
    private String password;
 
+   @Enumerated(EnumType.STRING)
+   @Column(nullable = false)
+   private UserRole role;
+
    protected User() {
    }
 
    public User(String email, String password) {
       this.email = email;
       this.password = password;
+      this.role = UserRole.USER;
    }
 
    public Long getId() {
@@ -40,7 +47,15 @@ public class User {
       return password;
    }
 
+   public UserRole getRole() {
+      return role;
+   }
+
    public void setEmail(String email) {
       this.email = email;
    };
+
+   public void setRole(UserRole role) {
+      this.role = role;
+   }
 }

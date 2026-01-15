@@ -22,7 +22,7 @@ public class UserManagementService {
 
    public List<GetUserResponse> getUsers() {
       List<GetUserResponse> users = this.userManagementRepo.findAll().stream()
-            .map(user -> new GetUserResponse(user.getId(), user.getEmail())).toList();
+            .map(user -> new GetUserResponse(user.getId(), user.getEmail(), user.getRole())).toList();
       return users;
    }
 
@@ -41,6 +41,6 @@ public class UserManagementService {
 
       User savedUser = this.userManagementRepo.save(user);
 
-      return new GetUserResponse(savedUser.getId(), savedUser.getEmail());
+      return new GetUserResponse(savedUser.getId(), savedUser.getEmail(), user.getRole());
    }
 }
