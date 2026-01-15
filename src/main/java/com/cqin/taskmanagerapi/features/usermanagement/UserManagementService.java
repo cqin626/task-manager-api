@@ -22,7 +22,13 @@ public class UserManagementService {
 
    public List<GetUserResponse> getUsers() {
       List<GetUserResponse> users = this.userManagementRepo.findAll().stream()
-            .map(user -> new GetUserResponse(user.getId(), user.getEmail(), user.getRole())).toList();
+            .map(user -> new GetUserResponse(
+                  user.getId(),
+                  user.getEmail(),
+                  user.getFirstName(),
+                  user.getLastName(),
+                  user.getRole()))
+            .toList();
       return users;
    }
 
@@ -34,13 +40,22 @@ public class UserManagementService {
    }
 
    public GetUserResponse addUser(CreateUserRequest createUserReq) {
-      User user = new User(createUserReq.email(), this.passwordEncoder.encode(createUserReq.password()));
+      User user = new User(
+            createUserReq.email(),
+            createUserReq.firstName(),
+            createUserReq.lastName(),
+            this.passwordEncoder.encode(createUserReq.password()));
 
       if (this.userManagementRepo.existsByEmail(user.getEmail()))
          throw new ConflictException("User already exists");
 
       User savedUser = this.userManagementRepo.save(user);
 
-      return new GetUserResponse(savedUser.getId(), savedUser.getEmail(), user.getRole());
+      return new GetUserResponse(
+            savedUser.getId(),
+            savedUser.getEmail(),
+            user.getFirstName(),
+            user.getLastName(),
+            user.getRole());
    }
 }

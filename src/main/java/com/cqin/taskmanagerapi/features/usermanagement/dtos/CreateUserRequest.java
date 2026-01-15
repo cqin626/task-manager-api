@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record CreateUserRequest(
-      @NotBlank @Email String email,
-      @NotNull @Size(min = 14, message = "password must be at least 14 characters") String password) {
+            @NotBlank String firstName,
+            @NotBlank String lastName,
+            @NotBlank @Email String email,
+            @NotNull @Size(min = 14, message = "password must be at least 14 characters") String password) {
 }
