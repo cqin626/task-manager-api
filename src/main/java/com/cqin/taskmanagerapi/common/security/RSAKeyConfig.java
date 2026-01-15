@@ -1,4 +1,4 @@
-package com.cqin.taskmanagerapi.common.configs;
+package com.cqin.taskmanagerapi.common.security;
 
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPrivateKey;

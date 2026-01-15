@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.ForbiddenException;
 import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.ResourceNotFoundException;
 import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.UnauthorizedException;
+import com.cqin.taskmanagerapi.common.security.JwtVerifier;
 import com.cqin.taskmanagerapi.features.auth.dtos.LoginUserRequest;
 import com.cqin.taskmanagerapi.features.authtokenmanagement.AuthTokenService;
 import com.cqin.taskmanagerapi.features.authtokenmanagement.RefreshToken;
@@ -24,14 +25,17 @@ public class AuthService {
    private PasswordEncoder passwordEncoder;
    private final AuthTokenService authTokenService;
    private final UserManagementService userManagementService;
+   private final JwtVerifier jwtVerifier;
 
    public AuthService(
          UserManagementService userManagementService,
          PasswordEncoder passwordEncoder,
-         AuthTokenService authTokenService) {
+         AuthTokenService authTokenService,
+         JwtVerifier jwtVerifier) {
       this.passwordEncoder = passwordEncoder;
       this.authTokenService = authTokenService;
       this.userManagementService = userManagementService;
+      this.jwtVerifier = jwtVerifier;
    }
 
    public GetUserResponse registerUser(CreateUserRequest createUserReq) {
@@ -57,7 +61,6 @@ public class AuthService {
    public TokenResponse getAccessToken(User user) {
       Map<String, Object> accessClaims = Map.of(
             "uid", user.getId(),
-            "email", user.getEmail(),
             "role", user.getRole());
 
       return this.authTokenService.generateAccessToken(accessClaims);
@@ -75,7 +78,7 @@ public class AuthService {
 
    @Transactional
    public User getUserFromVerifiedRefreshToken(String refreshTokenStr) {
-      this.authTokenService.getVerifiedAndParsedToken(refreshTokenStr);
+      this.jwtVerifier.getVerifiedAndParsedToken(refreshTokenStr);
 
       RefreshToken verifiedRefreshToken = this.authTokenService.getRefreshToken(refreshTokenStr);
 

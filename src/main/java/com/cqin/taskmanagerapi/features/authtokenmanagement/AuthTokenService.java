@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 import java.util.HexFormat;
 import java.util.List;
@@ -13,11 +12,9 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.ResourceNotFoundException;
-import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.UnauthorizedException;
 import com.cqin.taskmanagerapi.features.authtokenmanagement.dtos.TokenResponse;
 import com.cqin.taskmanagerapi.features.usermanagement.User;
 
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 
 import org.springframework.transaction.annotation.Propagation;
@@ -26,12 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuthTokenService {
    private final RSAPrivateKey privateKey;
-   private final RSAPublicKey publicKey;
    private final AuthTokenRepo authTokenRepo;
 
-   public AuthTokenService(RSAPrivateKey privateKey, RSAPublicKey publicKey, AuthTokenRepo authTokenRepo) {
+   public AuthTokenService(
+         RSAPrivateKey privateKey,
+         AuthTokenRepo authTokenRepo) {
       this.privateKey = privateKey;
-      this.publicKey = publicKey;
       this.authTokenRepo = authTokenRepo;
    }
 
@@ -92,18 +89,6 @@ public class AuthTokenService {
       List<RefreshToken> tokens = authTokenRepo.findAllByUserAndRevokedFalse(user);
 
       tokens.forEach(token -> token.setRevoked(true));
-   }
-
-   public Map<String, Object> getVerifiedAndParsedToken(String token) {
-      try {
-         return Jwts.parser()
-               .verifyWith(this.publicKey)
-               .build()
-               .parseSignedClaims(token)
-               .getPayload();
-      } catch (JwtException e) {
-         throw new UnauthorizedException("Invalid or expired token");
-      }
    }
 
    public RefreshToken getRefreshToken(String token) {
