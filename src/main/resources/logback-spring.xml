@@ -1,0 +1,23 @@
+<configuration>
+   <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+
+   <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+         <pattern>%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} [%thread] %highlight(%-5level) %clr(%logger{36}){cyan} - %msg%n</pattern>
+      </encoder>
+   </appender>
+
+   <appender name="File" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>logs/app.log</file>
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+         <fileNamePattern>logs/app-%d{yyyy-MM-dd}.log</fileNamePattern>
+         <maxHistory>30</maxHistory>
+      </rollingPolicy>
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+   </appender>
+
+   <root level="INFO">
+      <appender-ref ref="Console" />
+      <appender-ref ref="File" />
+   </root>
+</configuration>

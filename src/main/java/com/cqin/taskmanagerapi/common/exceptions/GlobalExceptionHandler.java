@@ -1,5 +1,7 @@
 package com.cqin.taskmanagerapi.common.exceptions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -14,6 +16,8 @@ import com.cqin.taskmanagerapi.common.responses.APIResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+      private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
       @ExceptionHandler(NoHandlerFoundException.class)
       public ResponseEntity<APIResponse<Void>> handleInvalidEndpoint(NoHandlerFoundException ex) {
             return ResponseEntity
@@ -57,7 +61,7 @@ public class GlobalExceptionHandler {
 
       @ExceptionHandler(Exception.class)
       public ResponseEntity<APIResponse<Void>> handleInternalServerError(Exception ex) {
-            // TODO: Add logging
+            logger.error("Internal server error occurred", ex);
             return ResponseEntity
                         .status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(APIResponse.error("Internal server error"));
