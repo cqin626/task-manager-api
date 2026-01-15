@@ -7,15 +7,21 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.ResourceNotFoundException;
+import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.UnauthorizedException;
 import com.cqin.taskmanagerapi.features.authtokenmanagement.dtos.TokenResponse;
 import com.cqin.taskmanagerapi.features.usermanagement.User;
 
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import jakarta.transaction.Transactional;
+
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthTokenService {
@@ -79,5 +85,30 @@ public class AuthTokenService {
       this.authTokenRepo.findByTokenHash(tokenHash).ifPresent(refreshToken -> {
          refreshToken.setRevoked(true);
       });
+   }
+
+   @Transactional(propagation = Propagation.REQUIRES_NEW)
+   public void invalidateAllTokensForUser(User user) {
+      List<RefreshToken> tokens = authTokenRepo.findAllByUserAndRevokedFalse(user);
+
+      tokens.forEach(token -> token.setRevoked(true));
+   }
+
+   public Map<String, Object> getVerifiedAndParsedToken(String token) {
+      try {
+         return Jwts.parser()
+               .verifyWith(this.publicKey)
+               .build()
+               .parseSignedClaims(token)
+               .getPayload();
+      } catch (JwtException e) {
+         throw new UnauthorizedException("Invalid or expired token");
+      }
+   }
+
+   public RefreshToken getRefreshToken(String token) {
+      String tokenHash = this.getTokenHash(token);
+      return this.authTokenRepo.findByTokenHash(tokenHash)
+            .orElseThrow(() -> new ResourceNotFoundException("Token not found"));
    }
 }

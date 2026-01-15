@@ -2,7 +2,6 @@ package com.cqin.taskmanagerapi.features.auth;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -14,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.UnauthorizedException;
 import com.cqin.taskmanagerapi.common.responses.APIResponse;
 import com.cqin.taskmanagerapi.features.auth.dtos.LoginUserRequest;
-import com.cqin.taskmanagerapi.features.authtokenmanagement.AuthTokenService;
 import com.cqin.taskmanagerapi.features.authtokenmanagement.dtos.TokenResponse;
 import com.cqin.taskmanagerapi.features.usermanagement.User;
 import com.cqin.taskmanagerapi.features.usermanagement.dtos.CreateUserRequest;
@@ -28,11 +27,9 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
    private final AuthService authService;
-   private final AuthTokenService authTokenService;
 
-   public AuthController(AuthService authService, AuthTokenService authTokenService) {
+   public AuthController(AuthService authService) {
       this.authService = authService;
-      this.authTokenService = authTokenService;
    }
 
    @PostMapping("/registration")
@@ -47,14 +44,10 @@ public class AuthController {
    public ResponseEntity<APIResponse<TokenResponse>> handlerUserLogin(
          @RequestBody @Valid LoginUserRequest loginUserReq) {
       User verifiedUser = this.authService.getVerifiedUser(loginUserReq);
+      TokenResponse accessToken = this.authService.getAccessToken(verifiedUser);
+      TokenResponse refreshToken = this.authService.getRefreshToken(verifiedUser);
 
-      Map<String, Object> accessClaims = Map.of("id", verifiedUser.getId(), "email", verifiedUser.getEmail());
-      Map<String, Object> refreshClaims = Map.of("id", verifiedUser.getId());
-
-      TokenResponse accessToken = this.authTokenService.generateAccessToken(accessClaims);
-      TokenResponse refreshToken = this.authTokenService.generateRefreshToken(refreshClaims, verifiedUser);
-
-      ResponseCookie refreshCookie = ResponseCookie
+      ResponseCookie refreshTokenCookie = ResponseCookie
             .from("refresh_token", refreshToken.token())
             .httpOnly(true)
             .secure(true)
@@ -65,18 +58,21 @@ public class AuthController {
 
       return ResponseEntity
             .status(HttpStatus.OK)
-            .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+            .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
             .body(APIResponse.success(accessToken));
    }
 
    @PostMapping("/logout")
    public ResponseEntity<APIResponse<Void>> handleUserLogout(
-         @CookieValue(name = "refresh_token", required = false) String refreshToken) {
-      if (refreshToken != null) {
-         this.authTokenService.invalidateRefreshToken(refreshToken);
+         @CookieValue(name = "refresh_token", required = false) String refreshTokenStr) {
+      if (refreshTokenStr == null) {
+         return ResponseEntity
+               .status(HttpStatus.OK)
+               .body(APIResponse.success(null));
       }
+      this.authService.invalidateRefreshToken(refreshTokenStr);
 
-      ResponseCookie refreshCookie = ResponseCookie
+      ResponseCookie invalidatedRefreshTokenCookie = ResponseCookie
             .from("refresh_token", "")
             .httpOnly(true)
             .secure(true)
@@ -87,8 +83,33 @@ public class AuthController {
 
       return ResponseEntity
             .status(HttpStatus.OK)
-            .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+            .header(HttpHeaders.SET_COOKIE, invalidatedRefreshTokenCookie.toString())
             .body(APIResponse.success(null));
    }
 
+   @PostMapping("/refresh")
+   public ResponseEntity<APIResponse<TokenResponse>> handleRefresh(
+         @CookieValue(name = "refresh_token", required = false) String refreshTokenStr) {
+      if (refreshTokenStr == null) {
+         throw new UnauthorizedException("Unauthorized to refresh");
+      }
+
+      User user = this.authService.getUserFromVerifiedRefreshToken(refreshTokenStr);
+      TokenResponse accessToken = this.authService.getAccessToken(user);
+      TokenResponse refreshToken = this.authService.getRefreshToken(user);
+
+      ResponseCookie refreshTokenCookie = ResponseCookie
+            .from("refresh_token", refreshToken.token())
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("Lax")
+            .path("/api/v1/auth")
+            .maxAge(Duration.between(Instant.now(), refreshToken.expiresAt()))
+            .build();
+
+      return ResponseEntity
+            .status(HttpStatus.OK)
+            .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+            .body(APIResponse.success(accessToken));
+   }
 }
