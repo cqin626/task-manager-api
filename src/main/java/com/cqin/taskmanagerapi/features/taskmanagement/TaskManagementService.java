@@ -69,4 +69,13 @@ public class TaskManagementService {
 
       return TaskMapper.toDto(task);
    }
+
+   @Transactional
+   public void deleteTask(long taskId, long uid) {
+      long deleted = this.taskManagementRepo.deleteByIdAndUserId(taskId, uid);
+
+      if (deleted == 0) {
+         throw new ResourceNotFoundException("Cannot modify task you do not own");
+      }
+   }
 }

@@ -13,4 +13,6 @@ public interface TaskManagementRepo extends JpaRepository<Task, Long> {
    List<Task> findAllByUser(User user);
 
    Optional<Task> findByIdAndUserId(long id, long userId);
+
+   long deleteByIdAndUserId(long taskId, long userId);
 }

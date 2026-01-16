@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -63,6 +64,15 @@ public class TaskManagementController {
       GetTaskResponse updateTaskRes = this.taskManagementService.updateTask(updateTaskReq, taskId, uid);
 
       return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(updateTaskRes));
+   }
+
+   @DeleteMapping("/{taskId}")
+   public ResponseEntity<APIResponse<Void>> deleteTask(
+         @PathVariable long taskId,
+         @AuthenticationPrincipal long uid) {
+      this.taskManagementService.deleteTask(taskId, uid);
+
+      return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(null));
    }
 
 }
