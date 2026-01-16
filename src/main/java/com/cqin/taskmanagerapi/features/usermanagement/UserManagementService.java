@@ -1,12 +1,15 @@
 package com.cqin.taskmanagerapi.features.usermanagement;
 
-import java.util.List;
-
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.ConflictException;
 import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.ResourceNotFoundException;
+import com.cqin.taskmanagerapi.common.responses.SliceResponse;
+import com.cqin.taskmanagerapi.common.responses.SliceResponseMapper;
 import com.cqin.taskmanagerapi.features.usermanagement.dtos.CreateUserRequest;
 import com.cqin.taskmanagerapi.features.usermanagement.dtos.GetUserResponse;
 
@@ -20,16 +23,17 @@ public class UserManagementService {
       this.passwordEncoder = passwordEncoder;
    }
 
-   public List<GetUserResponse> getUsers() {
-      List<GetUserResponse> users = this.userManagementRepo.findAll().stream()
-            .map(user -> new GetUserResponse(
-                  user.getId(),
-                  user.getEmail(),
-                  user.getFirstName(),
-                  user.getLastName(),
-                  user.getRole()))
-            .toList();
-      return users;
+   public SliceResponse<GetUserResponse> getUsers(int page, int size) {
+      Pageable pageable = PageRequest.of(
+            page,
+            size,
+            Sort
+                  .by("id").descending());
+
+      return SliceResponseMapper.toSliceResponse(
+            this.userManagementRepo
+                  .findAllBy(pageable)
+                  .map(UserMapper::toDto));
    }
 
    public User getUserByEmail(String email) {
@@ -51,11 +55,6 @@ public class UserManagementService {
 
       User savedUser = this.userManagementRepo.save(user);
 
-      return new GetUserResponse(
-            savedUser.getId(),
-            savedUser.getEmail(),
-            user.getFirstName(),
-            user.getLastName(),
-            user.getRole());
+      return UserMapper.toDto(savedUser);
    }
 }
