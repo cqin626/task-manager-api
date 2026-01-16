@@ -37,6 +37,15 @@ public class TaskManagementController {
       return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userTasks));
    }
 
+   @GetMapping("/{taskId}")
+   public ResponseEntity<APIResponse<GetTaskResponse>> getTask(
+         @PathVariable long taskId,
+         @AuthenticationPrincipal long uid) {
+      GetTaskResponse userTask = this.taskManagementService.getTask(taskId, uid);
+
+      return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userTask));
+   }
+
    @PostMapping("")
    public ResponseEntity<APIResponse<GetTaskResponse>> addTask(
          @RequestBody @Valid CreateTaskRequest createTaskReq,

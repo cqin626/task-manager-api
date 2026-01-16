@@ -34,6 +34,13 @@ public class TaskManagementService {
       return userTasks;
    }
 
+   public GetTaskResponse getTask(long taskId, long uid) {
+      Task task = this.taskManagementRepo.findByIdAndUserId(taskId, uid)
+            .orElseThrow(() -> new ResourceNotFoundException("Cannot access task you do not own"));
+
+      return TaskMapper.toDto(task);
+   }
+
    public GetTaskResponse addTask(CreateTaskRequest createTaskReq, long uid) {
       User userRef = entityManager.getReference(User.class, uid);
 
