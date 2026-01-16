@@ -26,9 +26,10 @@ public class Task {
    @GeneratedValue(strategy = GenerationType.IDENTITY)
    private long id;
 
-   @Column(nullable = false)
+   @Column(nullable = false, length = 255)
    private String title;
 
+   @Column(length = 1000)
    private String description;
 
    @Enumerated(EnumType.STRING)

@@ -4,9 +4,12 @@ import java.time.Instant;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.ResourceNotFoundException;
 import com.cqin.taskmanagerapi.features.taskmanagement.dtos.CreateTaskRequest;
 import com.cqin.taskmanagerapi.features.taskmanagement.dtos.GetTaskResponse;
+import com.cqin.taskmanagerapi.features.taskmanagement.dtos.UpdateTaskRequest;
 import com.cqin.taskmanagerapi.features.usermanagement.User;
 
 import jakarta.persistence.EntityManager;
@@ -22,16 +25,11 @@ public class TaskManagementService {
       this.entityManager = entityManager;
    }
 
-   public List<GetTaskResponse> getUserTasks(long uid) {
+   public List<GetTaskResponse> getTasks(long uid) {
       User userRef = entityManager.getReference(User.class, uid);
 
       List<GetTaskResponse> userTasks = this.taskManagementRepo.findAllByUser(userRef).stream()
-            .map(userTask -> new GetTaskResponse(
-                  userTask.getId(),
-                  userTask.getTitle(),
-                  userTask.getDescription(),
-                  userTask.getStatus(),
-                  userTask.getCreatedAt()))
+            .map(userTask -> TaskMapper.toDto(userTask))
             .toList();
       return userTasks;
    }
@@ -45,11 +43,23 @@ public class TaskManagementService {
             Instant.now(),
             userRef));
 
-      return new GetTaskResponse(
-            savedTask.getId(),
-            savedTask.getTitle(),
-            savedTask.getDescription(),
-            savedTask.getStatus(),
-            savedTask.getCreatedAt());
+      return TaskMapper.toDto(savedTask);
+   }
+
+   @Transactional
+   public GetTaskResponse updateTask(UpdateTaskRequest updateTaskReq, long taskId, long uid) {
+      Task task = this.taskManagementRepo.findByIdAndUserId(taskId, uid)
+            .orElseThrow(() -> new ResourceNotFoundException("Cannot modify task you do not own"));
+
+      if (updateTaskReq.title() != null)
+         task.setTitle(updateTaskReq.title());
+
+      if (updateTaskReq.description() != null)
+         task.setDescription(updateTaskReq.description());
+
+      if (updateTaskReq.status() != null)
+         task.setStatus(updateTaskReq.status());
+
+      return TaskMapper.toDto(task);
    }
 }

@@ -9,6 +9,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.HttpException;
@@ -37,6 +38,13 @@ public class GlobalExceptionHandler {
             return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
                         .body(APIResponse.error("Malformed JSON request"));
+      }
+
+      @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+      public ResponseEntity<APIResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+            return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(APIResponse.error("Invalid path variable: " + ex.getValue()));
       }
 
       @ExceptionHandler(HttpException.class)
