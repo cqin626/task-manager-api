@@ -27,7 +27,7 @@ public class TaskManagementService {
       this.entityManager = entityManager;
    }
 
-   public SliceResponse<GetTaskResponse> getTasks(long uid, int page, int size) {
+   public SliceResponse<GetTaskResponse> getTasks(long uid, int page, int size, TaskStatus status) {
       User userRef = entityManager.getReference(User.class, uid);
 
       Pageable pageable = PageRequest.of(
@@ -39,7 +39,7 @@ public class TaskManagementService {
 
       return SliceResponseMapper.from(
             this.taskManagementRepo
-                  .findAllByUser(userRef, pageable)
+                  .findAllByUserAndStatusOptional(userRef, status, pageable)
                   .map(TaskMapper::toDto));
    }
 

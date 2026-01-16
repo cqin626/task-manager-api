@@ -38,9 +38,10 @@ public class TaskManagementController {
    public ResponseEntity<APIResponse<SliceResponse<GetTaskResponse>>> getTasks(
          @AuthenticationPrincipal long uid,
          @RequestParam(defaultValue = "0") int page,
-         @RequestParam(defaultValue = "10") @Max(50) int size) {
+         @RequestParam(defaultValue = "10") @Max(50) int size,
+         @RequestParam(required = false) TaskStatus status) {
 
-      SliceResponse<GetTaskResponse> userTasks = this.taskManagementService.getTasks(uid, page, size);
+      SliceResponse<GetTaskResponse> userTasks = this.taskManagementService.getTasks(uid, page, size, status);
 
       return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userTasks));
    }
