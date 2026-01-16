@@ -13,10 +13,16 @@ import com.cqin.taskmanagerapi.features.usermanagement.User;
 
 @Repository
 public interface TaskManagementRepo extends JpaRepository<Task, Long> {
-   @Query("SELECT t FROM Task t WHERE t.user = :user AND (:status IS NULL OR t.status = :status)")
+   @Query("""
+               SELECT t FROM Task t
+               WHERE t.user = :user
+               AND (:status IS NULL OR t.status = :status)
+               AND (:title is NULL OR LOWER(t.title) LIKE LOWER(CONCAT(:title,'%')))
+         """)
    Slice<Task> findAllByUserAndStatusOptional(
          @Param("user") User user,
          @Param("status") TaskStatus status,
+         @Param("title") String title,
          Pageable pageable);
 
    Optional<Task> findByIdAndUserId(long id, long userId);

@@ -33,18 +33,24 @@ public class TaskManagementService {
       this.entityManager = entityManager;
    }
 
-   public SliceResponse<GetTaskResponse> getTasks(long uid, int page, int size, TaskStatus status, String sort) {
+   public SliceResponse<GetTaskResponse> getTasks(
+         long uid,
+         int page,
+         int size,
+         TaskStatus status,
+         String sort,
+         String search) {
       User userRef = entityManager.getReference(User.class, uid);
 
       Sort userSort = this.getParsedSort(sort);
-      
+
       Sort finalizedSort = userSort.and(Sort.by(Sort.Direction.DESC, "id"));
 
       Pageable pageable = PageRequest.of(page, size, finalizedSort);
 
       return SliceResponseMapper.from(
             this.taskManagementRepo
-                  .findAllByUserAndStatusOptional(userRef, status, pageable)
+                  .findAllByUserAndStatusOptional(userRef, status, search, pageable)
                   .map(TaskMapper::toDto));
    }
 
