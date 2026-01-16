@@ -1,11 +1,16 @@
 package com.cqin.taskmanagerapi.features.taskmanagement;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.BadRequestException;
 import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.ResourceNotFoundException;
 import com.cqin.taskmanagerapi.common.responses.SliceResponse;
 import com.cqin.taskmanagerapi.common.responses.SliceResponseMapper;
@@ -21,21 +26,21 @@ public class TaskManagementService {
 
    private final TaskManagementRepo taskManagementRepo;
    private final EntityManager entityManager;
+   private static final Set<String> ALLOWED_SORTS = Set.of("createdAt", "title");
 
    public TaskManagementService(TaskManagementRepo taskManagementRepo, EntityManager entityManager) {
       this.taskManagementRepo = taskManagementRepo;
       this.entityManager = entityManager;
    }
 
-   public SliceResponse<GetTaskResponse> getTasks(long uid, int page, int size, TaskStatus status) {
+   public SliceResponse<GetTaskResponse> getTasks(long uid, int page, int size, TaskStatus status, String sort) {
       User userRef = entityManager.getReference(User.class, uid);
 
-      Pageable pageable = PageRequest.of(
-            page,
-            size,
-            Sort
-                  .by("createdAt").descending()
-                  .and(Sort.by("id").descending()));
+      Sort userSort = this.getParsedSort(sort);
+      
+      Sort finalizedSort = userSort.and(Sort.by(Sort.Direction.DESC, "id"));
+
+      Pageable pageable = PageRequest.of(page, size, finalizedSort);
 
       return SliceResponseMapper.from(
             this.taskManagementRepo
@@ -85,5 +90,32 @@ public class TaskManagementService {
       if (deleted == 0) {
          throw new ResourceNotFoundException("Cannot modify task you do not own");
       }
+   }
+
+   private Sort getParsedSort(String sortParam) {
+      if (sortParam == null || sortParam.isBlank()) {
+         return Sort.by(Sort.Direction.DESC, "createdAt");
+      }
+
+      List<Sort.Order> orders = new ArrayList<>();
+      String[] parts = sortParam.split(",");
+
+      for (String part : parts) {
+         String field = part;
+         Sort.Direction direction = Sort.Direction.ASC;
+
+         if (part.startsWith("-")) {
+            field = part.substring(1);
+            direction = Sort.Direction.DESC;
+         }
+
+         if (!ALLOWED_SORTS.contains(field)) {
+            throw new BadRequestException("Invalid sort");
+         }
+
+         orders.add(new Sort.Order(direction, field));
+      }
+
+      return Sort.by(orders);
    }
 }
