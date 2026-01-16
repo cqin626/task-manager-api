@@ -39,7 +39,7 @@ public class TaskManagementService {
                   .by("createdAt").descending()
                   .and(Sort.by("id").descending()));
 
-      return SliceResponseMapper.toSliceResponse(
+      return SliceResponseMapper.from(
             this.taskManagementRepo
                   .findAllByUser(userRef, pageable)
                   .map(TaskMapper::toDto));

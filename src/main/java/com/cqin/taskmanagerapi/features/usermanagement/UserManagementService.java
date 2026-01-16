@@ -30,7 +30,7 @@ public class UserManagementService {
             Sort
                   .by("id").descending());
 
-      return SliceResponseMapper.toSliceResponse(
+      return SliceResponseMapper.from(
             this.userManagementRepo
                   .findAllBy(pageable)
                   .map(UserMapper::toDto));
