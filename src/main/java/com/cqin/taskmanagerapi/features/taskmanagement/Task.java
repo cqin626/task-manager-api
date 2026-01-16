@@ -47,11 +47,11 @@ public class Task {
    protected Task() {
    }
 
-   public Task(String title, String description, Instant createdAt, User user) {
+   public Task(String title, String description, User user) {
       this.title = title;
       this.description = description;
       this.status = TaskStatus.PENDING;
-      this.createdAt = createdAt;
+      this.createdAt = Instant.now();
       this.user = user;
    }
 

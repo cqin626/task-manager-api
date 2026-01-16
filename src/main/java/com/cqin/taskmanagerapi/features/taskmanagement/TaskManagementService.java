@@ -1,7 +1,5 @@
 package com.cqin.taskmanagerapi.features.taskmanagement;
 
-import java.time.Instant;
-
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -58,7 +56,6 @@ public class TaskManagementService {
       Task savedTask = this.taskManagementRepo.save(new Task(
             createTaskReq.title(),
             createTaskReq.description(),
-            Instant.now(),
             userRef));
 
       return TaskMapper.toDto(savedTask);
