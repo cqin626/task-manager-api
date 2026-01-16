@@ -15,6 +15,8 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.HttpException;
 import com.cqin.taskmanagerapi.common.responses.APIResponse;
 
+import jakarta.validation.ConstraintViolationException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
       private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
@@ -44,7 +46,16 @@ public class GlobalExceptionHandler {
       public ResponseEntity<APIResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
             return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
-                        .body(APIResponse.error("Invalid path variable: " + ex.getValue()));
+                        .body(APIResponse.error("Invalid type for request parameter or path variable: " + ex.getPropertyName()));
+      }
+
+      @ExceptionHandler(ConstraintViolationException.class)
+      public ResponseEntity<APIResponse<Void>> handleInvalidParameter(
+                  ConstraintViolationException ex) {
+
+            return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(APIResponse.error("Violated constraints on parameter or path variable: " + ex.getMessage()));
       }
 
       @ExceptionHandler(HttpException.class)

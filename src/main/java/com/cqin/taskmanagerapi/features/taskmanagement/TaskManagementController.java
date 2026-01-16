@@ -1,10 +1,9 @@
 package com.cqin.taskmanagerapi.features.taskmanagement;
 
-import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,16 +11,20 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cqin.taskmanagerapi.common.responses.APIResponse;
+import com.cqin.taskmanagerapi.common.responses.SliceResponse;
 import com.cqin.taskmanagerapi.features.taskmanagement.dtos.CreateTaskRequest;
 import com.cqin.taskmanagerapi.features.taskmanagement.dtos.GetTaskResponse;
 import com.cqin.taskmanagerapi.features.taskmanagement.dtos.UpdateTaskRequest;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 
 @RestController
+@Validated
 @RequestMapping("/api/v1/tasks")
 public class TaskManagementController {
 
@@ -32,8 +35,12 @@ public class TaskManagementController {
    }
 
    @GetMapping("")
-   public ResponseEntity<APIResponse<List<GetTaskResponse>>> getTasks(@AuthenticationPrincipal long uid) {
-      List<GetTaskResponse> userTasks = this.taskManagementService.getTasks(uid);
+   public ResponseEntity<APIResponse<SliceResponse<GetTaskResponse>>> getTasks(
+         @AuthenticationPrincipal long uid,
+         @RequestParam(defaultValue = "0") int page,
+         @RequestParam(defaultValue = "10") @Max(50) int size) {
+
+      SliceResponse<GetTaskResponse> userTasks = this.taskManagementService.getTasks(uid, page, size);
 
       return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(userTasks));
    }

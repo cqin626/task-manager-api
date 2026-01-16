@@ -1,12 +1,16 @@
 package com.cqin.taskmanagerapi.features.taskmanagement;
 
 import java.time.Instant;
-import java.util.List;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cqin.taskmanagerapi.common.exceptions.httpexceptions.ResourceNotFoundException;
+import com.cqin.taskmanagerapi.common.responses.SliceResponse;
+import com.cqin.taskmanagerapi.common.responses.SliceResponseMapper;
 import com.cqin.taskmanagerapi.features.taskmanagement.dtos.CreateTaskRequest;
 import com.cqin.taskmanagerapi.features.taskmanagement.dtos.GetTaskResponse;
 import com.cqin.taskmanagerapi.features.taskmanagement.dtos.UpdateTaskRequest;
@@ -25,13 +29,20 @@ public class TaskManagementService {
       this.entityManager = entityManager;
    }
 
-   public List<GetTaskResponse> getTasks(long uid) {
+   public SliceResponse<GetTaskResponse> getTasks(long uid, int page, int size) {
       User userRef = entityManager.getReference(User.class, uid);
 
-      List<GetTaskResponse> userTasks = this.taskManagementRepo.findAllByUser(userRef).stream()
-            .map(userTask -> TaskMapper.toDto(userTask))
-            .toList();
-      return userTasks;
+      Pageable pageable = PageRequest.of(
+            page,
+            size,
+            Sort
+                  .by("createdAt").descending()
+                  .and(Sort.by("id").descending()));
+
+      return SliceResponseMapper.toSliceResponse(
+            this.taskManagementRepo
+                  .findAllByUser(userRef, pageable)
+                  .map(TaskMapper::toDto));
    }
 
    public GetTaskResponse getTask(long taskId, long uid) {
